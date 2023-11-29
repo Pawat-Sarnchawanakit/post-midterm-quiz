@@ -99,4 +99,55 @@ class Table:
 
     def __str__(self):
         return self.table_name + ':' + str(self.table)
+    
+    def insert_row(self, dictionary):
+        '''
+        This method inserts a dictionary, dict, into a Table object, effectively adding a row to the Table. 
+        '''
+        self.table.append(dictionary)
 
+    def update_row(self, primary_attribute, primary_attribute_value, update_attribute, update_value):
+        '''
+        This method updates the current value of update_attribute to update_value
+        For example, my_table.update_row('Film', 'A Serious Man', 'Year', '2022') will change the 'Year' attribute for the 'Film'
+        'A Serious Man' from 2009 to 2022
+        '''
+        for val in self.table:
+            if val[primary_attribute] != primary_attribute_value:
+                continue
+            val[update_attribute] = update_value
+
+class CsvFile:
+    def __init__(self, path):
+        self.path = path
+    def read(self, callback):
+        import csv
+        with open(self.path) as file:
+            rows = csv.DictReader(file)
+            for row in rows:
+                callback(dict(row))
+
+movies_list = [];
+csv_file = CsvFile("./movies.csv")
+csv_file.read(lambda val: movies_list.append(val));
+movies = Table("Movies", movies_list);
+avg_comedy_gross = movies.filter(lambda val: val["Genre"] == "Comedy").aggregate(lambda gross: sum(gross)/len(gross), "Worldwide Gross")
+print(f"Average comedy movie worldwide gross is {avg_comedy_gross}");
+min_drama_audience = movies.filter(lambda val: val["Genre"] == "Drama").aggregate(lambda audience: min(audience), "Audience score %")
+print(f"minimum Audience score % for Drama movies is {min_drama_audience} %");
+fantasy_num = len(movies.filter(lambda val: val["Genre"] == "Fantasy").table)
+print(f"Number of fantasy movie is {fantasy_num}");
+movies.insert_row({
+    "Film": "The Shape of Water",
+    'Genre': 'Fantasy',
+    'Lead Studio': 'Fox',
+    'Audience score %': '72',
+    'Profitability': '9.765',
+    'Rotten Tomatoes %': '92',
+    'Worldwide Gross': '195.3',
+    'Year': '2017'
+})
+fantasy_num = len(movies.filter(lambda val: val["Genre"] == "Fantasy").table)
+print(f"Number of fantasy movie is {fantasy_num}")
+movies.update_row('Film', 'A Serious Man', 'Year', '2022')
+print(movies.table)
